@@ -1,2 +1,2 @@
 # trentLotteryContract
-eos smart contract
+smart contract on EOS!
