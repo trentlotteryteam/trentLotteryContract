@@ -2,8 +2,9 @@
 
 using namespace eosio;
 
-void trentlottery::player_bet(uint64_t period, account_name player, const asset& bet, vector<vector<uint16_t>> &bills) {
+void trentlottery::playerbet(uint64_t period, account_name player, const asset& bet, const uint32_t buyCnt, vector<uint16_t> &bills) {
     eosio_assert( bet.symbol == S(4,EOS) , "only EOS token allowed" );
+    eosio_assert( bet.is_valid(), "invalid bet" );
     eosio_assert( bet.amount > 0, "must bet positive quantity" );
     require_auth(player);
 
@@ -12,9 +13,10 @@ void trentlottery::player_bet(uint64_t period, account_name player, const asset&
         offer_bet.player    = player;
         offer_bet.periods   = period;
         offer_bet.bet       = bet;
+        offer_bet.buyCnt    = buyCnt;
         offer_bet.buyLottos = bills;
         offer_bet.buyTime   = now();
     });
 }
 
-EOSIO_ABI(trentlottery, (player_bet))
+EOSIO_ABI(trentlottery, (playerbet))
