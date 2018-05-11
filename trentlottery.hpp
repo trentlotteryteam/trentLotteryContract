@@ -19,8 +19,8 @@ namespace eosio {
                 EOSLIB_SERIALIZE( game, (period)(jackpot)(status)(winning_number) )
             };
 
-            //@abi table offer_bet i64
-            struct offer_bet {
+            //@abi table offerbet i64
+            struct offerbet {
                 uint64_t                    id;             // 主键，使用available_primary_key生成
                 account_name                player;         // 下注的用户帐号
                 uint64_t                    periods;        // The periods of bets
@@ -33,11 +33,11 @@ namespace eosio {
                 account_name    by_player()const { return player; }
                 uint64_t        by_period() const { return periods; }
 
-                EOSLIB_SERIALIZE( offer_bet, (id)(player)(periods)(bet)(buyLottos)(buyTime) )
+                EOSLIB_SERIALIZE( offerbet, (id)(player)(periods)(bet)(buyLottos)(buyTime) )
             };
             
-            //@abi table winning_record i64
-            struct winning_record {
+            //@abi table winningrec i64
+            struct winningrec {
                 uint64_t                    id;             // 主键，使用available_primary_key生成
                 account_name                winner;         // 中奖账户
                 uint64_t                    period;         // 中奖期数
@@ -48,20 +48,20 @@ namespace eosio {
                 uint64_t        primary_key()const { return id; }
                 uint64_t        by_period() const { return period; }
 
-                EOSLIB_SERIALIZE( winning_record, (id)(winner)(period)(win_currency)(offer_number)(prize) )
+                EOSLIB_SERIALIZE( winningrec, (id)(winner)(period)(win_currency)(offer_number)(prize) )
             };
 
         private:
 
             typedef eosio::multi_index<N(game), game> game_index;
 
-            typedef eosio::multi_index<N(offer_bets), offer_bet,
-                indexed_by<N(periods), const_mem_fun<offer_bet, uint64_t, &offer_bet::by_period > >,
-                indexed_by<N(player), const_mem_fun<offer_bet, account_name, &offer_bet::by_player> >
+            typedef eosio::multi_index<N(offer_bets), offerbet,
+                indexed_by<N(periods), const_mem_fun<offerbet, uint64_t, &offerbet::by_period > >,
+                indexed_by<N(player), const_mem_fun<offerbet, account_name, &offerbet::by_player> >
             > offer_bets_index;
 
-            typedef eosio::multi_index<N(winning_rec), winning_record,
-                indexed_by<N(period), const_mem_fun<winning_record, uint64_t, &winning_record::by_period>>
+            typedef eosio::multi_index<N(winningrec), winningrec,
+                indexed_by<N(period), const_mem_fun<winningrec, uint64_t, &winningrec::by_period>>
             > winning_record_index;
 
             game_index              games;
