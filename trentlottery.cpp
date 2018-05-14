@@ -15,13 +15,8 @@ void trentlottery::playerbet(uint64_t draw, account_name player, const asset& be
     //     std::make_tuple(player, _self, bet, std::string(""))
     // ).send();
 
-    eosio::print("begin to write db\n");
-
     auto bets_itr = offerbets.emplace(_self, [&](auto &offer) {
-        eosio::print("new offer bet");
-        uint64_t id = offerbets.available_primary_key();
-        eosio::print("new available key:", id);
-        offer.id = id;
+        offer.id = offerbets.available_primary_key();
         offer.player = player;
         offer.draw = draw;
         offer.bet = bet;
@@ -40,5 +35,6 @@ void trentlottery::creategame(uint64_t draw, const asset &jackpot, uint16_t stat
         game.hitnum     = hitnum;
     });
 }
+
 
 EOSIO_ABI(trentlottery, (playerbet)(creategame))
