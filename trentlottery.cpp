@@ -1,6 +1,8 @@
 #include "trentlottery.hpp"
 
 using namespace std;
+using eosio::action;
+using eosio::permission_level;
 
 //@abi action
 void trentlottery::playerbet(uint64_t draw, account_name player, const asset& bet, const uint32_t buycnt, std::vector<uint16_t> bills) {
@@ -9,13 +11,14 @@ void trentlottery::playerbet(uint64_t draw, account_name player, const asset& be
     eosio_assert( bet.amount > 0, "must bet positive quantity" );
     require_auth(player);
 
-    // action(
-    //     permission_level{player, N(active)},
-    //     N(eosio.token), N(transfer),
-    //     std::make_tuple(player, _self, bet, std::string(""))
-    // ).send();
+    action act(
+        permission_level{player, N(active)},
+        N(eosio.token), N(transfer),
+        std::make_tuple(player, _self, bet, std::string(""))
+    );
+    act.send();
 
-    auto bets_itr = offerbets.emplace(_self, [&](auto &offer) {
+    offerbets.emplace(_self, [&](auto &offer) {
         offer.id = offerbets.available_primary_key();
         offer.player = player;
         offer.draw = draw;
@@ -24,7 +27,6 @@ void trentlottery::playerbet(uint64_t draw, account_name player, const asset& be
         offer.buylottos = bills;
         offer.buytime = now();
     });
-    eosio::print("end write", bets_itr->id);
 }
 
 void trentlottery::creategame(uint64_t draw, const asset &jackpot, uint16_t status, std::vector<uint16_t> hitnum) {
