@@ -1,3 +1,4 @@
+#include <fc/crypto/rand.hpp>
 #include "trentlottery.hpp"
 
 using namespace std;
