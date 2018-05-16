@@ -16,17 +16,24 @@ using eosio::print;
 class trentlottery : public eosio::contract
 {
   private:
+    typedef enum game_status
+    {
+        LOCKING = 0,        // 锁定状态，不允许下注
+        BETTING,            // 正在进行
+        REVEAL,             // 正在开奖
+        OVER                // 已开奖，本轮游戏已结束
+    } game_status;
+
     //@abi table games i64
     struct game
     {
         uint64_t draw;                // 双色球期数
-        asset jackpot;                // 资金池总量
         uint16_t status;              // 此轮双色球游戏的状态，未开奖、正在开奖、已开奖
         std::vector<uint16_t> hitnum; // 当期开奖号码，红球、蓝球都放在一个数组中，前面6个表示红球，最后一个表示蓝球
 
         uint64_t primary_key() const { return draw; }
 
-        EOSLIB_SERIALIZE(game, (draw)(jackpot)(status)(hitnum))
+        EOSLIB_SERIALIZE(game, (draw)(status)(hitnum))
     };
 
     //@abi table offerbets i64
@@ -67,13 +74,13 @@ class trentlottery : public eosio::contract
     typedef eosio::multi_index<N(games), game> game_index;
 
     typedef eosio::multi_index<N(offerbets), offerbet,
-                indexed_by<N(draw), const_mem_fun<offerbet, uint64_t, &offerbet::by_draw>>,
-                indexed_by<N(player), const_mem_fun<offerbet, account_name, &offerbet::by_player>>
-            > offer_bets_index;
+                               indexed_by<N(draw), const_mem_fun<offerbet, uint64_t, &offerbet::by_draw>>,
+                               indexed_by<N(player), const_mem_fun<offerbet, account_name, &offerbet::by_player>>>
+        offer_bets_index;
 
     typedef eosio::multi_index<N(winnings), winning,
-                indexed_by<N(draw), const_mem_fun<winning, uint64_t, &winning::by_draw>>
-            > winning_record_index;
+                               indexed_by<N(draw), const_mem_fun<winning, uint64_t, &winning::by_draw>>>
+        winning_record_index;
 
     game_index games;
     offer_bets_index offerbets;
@@ -89,5 +96,8 @@ class trentlottery : public eosio::contract
     }
 
     void playerbet(uint64_t draw, account_name player, const asset &bet, const uint32_t buycnt, std::vector<uint16_t> bills);
-    void creategame(uint64_t draw, const asset &jackpot, uint16_t status, std::vector<uint16_t> hitnum);
+    void startgame();
+
+  private:
+    void creategame();
 };
