@@ -86,19 +86,24 @@ class trentlottery : public eosio::contract
     offer_bets_index offerbets;
     winning_record_index winnings;
 
+    asset ticketprice;
+
   public:
     trentlottery(account_name self)
         : eosio::contract(self),
           games(_self, _self),
           offerbets(_self, _self),
-          winnings(_self, _self)
+          winnings(_self, _self),
+          ticketprice(asset{10, S(4, EOS)})
     {
     }
 
-    void playerbet(uint64_t draw, account_name player, const asset &bet, const uint32_t buycnt, std::vector<uint16_t> bills);
+    void playerbet(uint64_t draw, account_name player, const uint32_t buycnt, std::vector<uint16_t> bills);
     void startgame();
     void enablegame();
     void jackpot();
+    void setprice(const asset& price);
+    void getprice();
 
   private:
     void creategame();
