@@ -71,4 +71,16 @@ void trentlottery::startgame()
     });
 }
 
-EOSIO_ABI(trentlottery, (playerbet)(startgame))
+void trentlottery::enablegame()
+{
+    auto lastgame_itr = games.rbegin();
+    eosio_assert(games.begin() != games.end(), "already have started games!");
+    eosio_assert(lastgame_itr->status == LOCKING, "game is not locking");
+
+    auto mgame_itr = games.find(lastgame_itr->draw);
+    games.modify(mgame_itr, 0, [&](auto &game) {
+        game.status = BETTING;
+    });
+}
+
+EOSIO_ABI(trentlottery, (playerbet)(startgame)(enablegame))
