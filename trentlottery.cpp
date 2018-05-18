@@ -83,4 +83,32 @@ void trentlottery::enablegame()
     });
 }
 
-EOSIO_ABI(trentlottery, (playerbet)(startgame)(enablegame))
+void trentlottery::jackpot()
+{
+    // asset balance = get_currency_balance(N(eosio.token), S(4, EOS), _self);
+    // print("trentlottery balance: ", balance.amount);
+}
+
+std::vector<std::vector<uint16_t>> trentlottery::parseofferbet(uint32_t cnt, std::vector<uint16_t> tickets)
+{
+    eosio_assert(cnt * 7 == tickets.size(), "maybe lost lottery tickets");
+
+    vector<vector<uint16_t>> betbills;
+
+    size_t seg = 0;
+    vector<uint16_t> subbill;
+    for (auto iter = tickets.cbegin(); iter != tickets.cend(); iter++) 
+    {
+        subbill.push_back(*iter);
+        seg++;
+
+        if (seg % 7 == 0)
+        {
+            betbills.push_back(subbill);
+            subbill.clear();
+        }
+    }
+    return betbills;
+}
+
+EOSIO_ABI(trentlottery, (playerbet)(startgame)(enablegame)(jackpot))

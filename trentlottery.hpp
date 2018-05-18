@@ -98,7 +98,9 @@ class trentlottery : public eosio::contract
     void playerbet(uint64_t draw, account_name player, const asset &bet, const uint32_t buycnt, std::vector<uint16_t> bills);
     void startgame();
     void enablegame();
+    void jackpot();
 
   private:
     void creategame();
+    std::vector<std::vector<uint16_t>> parseofferbet(uint32_t cnt, std::vector<uint16_t> tickets);
 };
