@@ -108,4 +108,5 @@ class trentlottery : public eosio::contract
   private:
     void creategame();
     std::vector<std::vector<uint16_t>> parseofferbet(uint32_t cnt, std::vector<uint16_t> tickets);
+    bool isTicketValid(std::vector<uint16_t> ticket);
 };

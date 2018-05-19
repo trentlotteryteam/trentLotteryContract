@@ -18,6 +18,12 @@ void trentlottery::playerbet(uint64_t draw, account_name player, const uint32_t 
 
     eosio_assert(buycnt*7 == bills.size(), "maybe lost lottery tickets");
 
+    auto tickets = parseofferbet(buycnt, bills);
+    for (uint32_t i = 0; i < buycnt; i++)
+    {
+        eosio_assert(isTicketValid(tickets.at(i)), "lottery tickets invalid");
+    }
+
     action act(
         permission_level{player, N(active)},
         N(eosio.token), N(transfer),
@@ -123,6 +129,33 @@ std::vector<std::vector<uint16_t>> trentlottery::parseofferbet(uint32_t cnt, std
         }
     }
     return betbills;
+}
+
+bool trentlottery::isTicketValid(std::vector<uint16_t> ticket)
+{
+    if (ticket.size() != 7) {return false;}
+
+    uint16_t blueball = ticket.at(6);
+    if (blueball < 1 || blueball > 16) {return false;}
+
+    for (uint16_t i = 0; i < ticket.size()-1; i++)
+    {
+        if (ticket.at(i) < 1 || ticket.at(i) > 33)
+        {
+            return false;
+        }
+    }
+
+    for (uint16_t i = 0; i < ticket.size()-2; i++)
+    {
+        uint16_t redball = ticket.at(i);
+        for (uint16_t j = i+1; j < ticket.size()-1; j++)
+        {
+            if (redball == ticket.at(j)) {return false;}
+        }
+    }
+
+    return true;
 }
 
 EOSIO_ABI(trentlottery, (playerbet)(startgame)(enablegame)(setprice)(getprice))
