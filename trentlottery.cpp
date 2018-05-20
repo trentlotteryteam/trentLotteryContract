@@ -158,4 +158,56 @@ bool trentlottery::isTicketValid(std::vector<uint16_t> ticket)
     return true;
 }
 
+uint16_t trentlottery::judgeprice(std::vector<uint16_t> hitnum, std::vector<uint16_t> offernum)
+{
+    uint16_t price = 0;
+    bool hitblue = false;
+    uint16_t hitrednum = 0;
+
+    uint16_t blueball = hitnum.at(6);
+    if (blueball == offernum.at(6))
+    {
+        hitblue = true;
+    }
+
+    for (uint16_t i = 0; i < hitnum.size()-1; i++)
+    {
+        for (uint16_t j = 0; j < offernum.size()-1; j++)
+        {
+            if (hitnum.at(i) == offernum.at(j))
+            {
+                hitrednum++;
+                break;
+            }
+        }
+    }
+
+    if (hitblue && hitrednum == 6)
+    {
+        return 1;
+    }
+    if (!hitblue && hitrednum == 6)
+    {
+        return 2;
+    }
+    if (hitblue && hitrednum == 5)
+    {
+        return 3;
+    }
+    if (((!hitblue && hitrednum == 5) || (hitblue && hitrednum == 4))
+    {
+        return 4;
+    }
+    if (((!hitblue && hitrednum == 4) || (hitblue && hitrednum == 3))
+    {
+        return 5;
+    }
+    if ((hitblue && hitrednum == 0) || (hitblue && hitrednum == 1) || (hitblue && hitrednum == 2))
+    {
+        return 6;
+    }
+
+    return price;
+}
+
 EOSIO_ABI(trentlottery, (playerbet)(startgame)(enablegame)(setprice)(getprice))
