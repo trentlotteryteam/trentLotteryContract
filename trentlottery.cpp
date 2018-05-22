@@ -194,11 +194,11 @@ uint16_t trentlottery::judgeprice(std::vector<uint16_t> hitnum, std::vector<uint
     {
         return 3;
     }
-    if (((!hitblue && hitrednum == 5) || (hitblue && hitrednum == 4))
+    if ((!hitblue && hitrednum == 5) || (hitblue && hitrednum == 4))
     {
         return 4;
     }
-    if (((!hitblue && hitrednum == 4) || (hitblue && hitrednum == 3))
+    if ((!hitblue && hitrednum == 4) || (hitblue && hitrednum == 3))
     {
         return 5;
     }
