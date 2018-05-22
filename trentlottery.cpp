@@ -6,12 +6,12 @@ using eosio::action;
 using eosio::permission_level;
 
 //@abi action
-void trentlottery::playerbet(uint64_t draw, account_name player, const uint32_t buycnt, std::vector<uint16_t> bills)
+void trentlottery::playerbet(uint64_t draw, const name player, const uint32_t buycnt, std::vector<uint16_t> bills)
 {
     require_auth(player);
     asset bet = ticketprice * buycnt;
 
-    eosio_assert(games.begin() == games.end(), "game not started");
+    eosio_assert(games.begin() != games.end(), "game not started");
     auto lastgame_itr = games.rbegin();
     eosio_assert(lastgame_itr->status == BETTING, "game is not betting");
     eosio_assert(lastgame_itr->draw == draw, "must match game draw");
@@ -65,7 +65,7 @@ void trentlottery::creategame()
 void trentlottery::startgame()
 {
     vector<uint16_t> initHitnum(7, 0);
-    eosio_assert(games.begin() != games.end(), "already have started games!");
+    eosio_assert(games.begin() == games.end(), "already have started games!");
     require_auth(_self);
 
     games.emplace(_self, [&](auto &game) {
@@ -77,7 +77,7 @@ void trentlottery::startgame()
 
 void trentlottery::setprice(const asset &price)
 {
-    eosio_assert(price.symbol == S(4, EOS), "only EOS token allowed");
+    eosio_assert(price.symbol == CORE_SYMBOL, "only core token allowed");
     eosio_assert(price.is_valid(), "invalid bet");
     eosio_assert(price.amount > 0, "must positive bet amount");
     require_auth(_self);
@@ -93,8 +93,8 @@ void trentlottery::getprice()
 void trentlottery::enablegame()
 {
     require_auth(_self);
+    eosio_assert(games.begin() != games.end(), "not started games!");
     auto lastgame_itr = games.rbegin();
-    eosio_assert(games.begin() != games.end(), "already have started games!");
     eosio_assert(lastgame_itr->status == LOCKING, "game is not locking");
 
     auto mgame_itr = games.find(lastgame_itr->draw);

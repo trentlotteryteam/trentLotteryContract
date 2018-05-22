@@ -94,11 +94,11 @@ class trentlottery : public eosio::contract
           games(_self, _self),
           offerbets(_self, _self),
           winnings(_self, _self),
-          ticketprice(asset{10, S(4, EOS)})
+          ticketprice(asset{10, CORE_SYMBOL})
     {
     }
 
-    void playerbet(uint64_t draw, account_name player, const uint32_t buycnt, std::vector<uint16_t> bills);
+    void playerbet(uint64_t draw, const name player, const uint32_t buycnt, std::vector<uint16_t> bills);
     void startgame();
     void enablegame();
     void jackpot();
