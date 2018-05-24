@@ -103,10 +103,18 @@ void trentlottery::enablegame()
     });
 }
 
-void trentlottery::jackpot()
+asset trentlottery::contractbalance()
 {
-    // asset balance = get_currency_balance(N(eosio.token), S(4, EOS), _self);
-    // print("trentlottery balance: ", balance.amount);
+    accounts accountstable(N(eosio.token), _self);
+    const auto &ac = accountstable.get(CORE_SYMBOL);
+    return ac.balance;
+}
+
+void trentlottery::jackpot(const name user)
+{
+    require_auth(user);
+    const auto balance = contractbalance();
+    print("trentlottery balance: ", balance.amount);
 }
 
 std::vector<std::vector<uint16_t>> trentlottery::parseofferbet(uint32_t cnt, std::vector<uint16_t> tickets)
@@ -210,4 +218,4 @@ uint16_t trentlottery::judgeprice(std::vector<uint16_t> hitnum, std::vector<uint
     return price;
 }
 
-EOSIO_ABI(trentlottery, (playerbet)(startgame)(enablegame)(setprice)(getprice))
+EOSIO_ABI(trentlottery, (playerbet)(startgame)(enablegame)(setprice)(getprice)(jackpot))
