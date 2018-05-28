@@ -99,6 +99,7 @@ class trentlottery : public eosio::contract
     winning_record_index winnings;
 
     asset ticketprice;
+    bool in_maintenance;
 
   public:
     trentlottery(account_name self)
