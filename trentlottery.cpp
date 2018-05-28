@@ -218,4 +218,81 @@ uint16_t trentlottery::judgeprice(std::vector<uint16_t> hitnum, std::vector<uint
     return price;
 }
 
+void trentlottery::drawhighlottery(uint64_t draw, std::vector<winning> firstwinnings, std::vector<winning> secondwinnings)
+{
+    asset firstpot{10000000, CORE_SYMBOL};
+    asset firstbonus = firstpot/firstwinnings.size();
+    asset secondpot{2000000, CORE_SYMBOL};
+    asset secondbonus = secondpot/secondwinnings.size();
+    for(uint16_t i = 0; i < secondwinnings.size(); i++){
+        sendbonus(firstbonus,firstwinnings.at(i).winner,draw,firstwinnings.at(i).prize,firstwinnings.at(i).offernum);
+    }
+    for(uint16_t i = 0; i < secondwinnings.size(); i++){
+        sendbonus(secondbonus,secondwinnings.at(i).winner,draw,secondwinnings.at(i).prize,secondwinnings.at(i).offernum);
+    }
+}
+
+void trentlottery::drawlottery(uint64_t draw){
+    auto hitnum = generatehitnum();
+    auto draw_index = offerbets.template get_index<N(draw)>();
+    auto bet = draw_index.find(draw);
+    vector<trentlottery::winning> firstwinnings;
+    vector<trentlottery::winning> secondwinnings;
+
+    for(; bet != draw_index.end(); bet++)
+    {
+        auto tickets = trentlottery::parseofferbet(bet->buycnt,bet->buylottos);
+        for(uint16_t i = 0; i < tickets.size()-1; i++){
+            auto prize = trentlottery::judgeprice(hitnum,tickets.at(i));
+            trentlottery::winning winprize;
+            switch(prize){
+                case 1:
+                winprize = {0,bet->player,draw,asset(0,CORE_SYMBOL),tickets.at(i),prize};
+                firstwinnings.push_back(winprize);
+                break;
+                case 2:
+                winprize = {0,bet->player,draw,asset(0,CORE_SYMBOL),tickets.at(i),prize};
+                secondwinnings.push_back(winprize);
+                break;
+                case 3:
+                sendbonus(asset(500,CORE_SYMBOL),bet->player,draw,prize,tickets.at(i));
+                break;
+                case 4:
+                sendbonus(asset(30,CORE_SYMBOL),bet->player,draw,prize,tickets.at(i));
+                break;
+                case 5:
+                sendbonus(asset(20,CORE_SYMBOL),bet->player,draw,prize,tickets.at(i));
+                break;
+                case 6:
+                sendbonus(asset(10,CORE_SYMBOL),bet->player,draw,prize,tickets.at(i));
+                break;
+            }
+        }
+    }
+
+    drawhighlottery(draw,firstwinnings,secondwinnings);
+}
+
+void trentlottery::sendbonus(asset bonus, account_name player,uint64_t draw,uint16_t prize,std::vector<uint16_t> offernum){
+    require_auth(_self);
+    action act(
+        permission_level{_self, N(active)},
+        N(eosio.token), N(transfer),
+        std::make_tuple(_self, player, bonus, std::string("")));
+    act.send();
+    winnings.emplace(_self, [&](auto &winning) {
+        winning.draw = draw;
+        winning.prize = prize;
+        winning.winner = player;
+        winning.currency = bonus;
+        winning.offernum = offernum;
+    });
+}
+
+std::vector<uint16_t> trentlottery::generatehitnum(){
+    require_auth(_self);
+    vector<uint16_t> initHitnum(7, 0);
+    return initHitnum;
+}
+
 EOSIO_ABI(trentlottery, (playerbet)(startgame)(enablegame)(setprice)(getprice)(jackpot))

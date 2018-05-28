@@ -123,4 +123,8 @@ class trentlottery : public eosio::contract
     bool isTicketValid(std::vector<uint16_t> ticket);
     uint16_t judgeprice(std::vector<uint16_t> hitnum, std::vector<uint16_t> offernum);
     asset contractbalance();
+    void drawlottery(uint64_t draw);
+    void drawhighlottery(uint64_t draw, std::vector<winning> firstwinnings, std::vector<winning> secondwinnings);
+    void sendbonus(asset bonus, account_name player,uint64_t draw,uint16_t prize,std::vector<uint16_t> offernum);
+    std::vector<uint16_t> generatehitnum();
 };
