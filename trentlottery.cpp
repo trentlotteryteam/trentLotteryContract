@@ -243,37 +243,37 @@ void trentlottery::drawlottery(uint64_t draw){
     {
         auto tickets = trentlottery::parseofferbet(bet->buycnt,bet->buylottos);
         for(uint16_t i = 0; i < tickets.size()-1; i++){
-            auto prize = trentlottery::judgeprice(hitnum,tickets.at(i));
+            auto prize = trentlottery::judgeprice(hitnum, tickets.at(i));
             trentlottery::winning winprize;
             switch(prize){
                 case 1:
-                winprize = {0,bet->player,draw,asset(0,CORE_SYMBOL),tickets.at(i),prize};
+                winprize = {0,bet->player,draw,asset(0, CORE_SYMBOL), tickets.at(i), prize};
                 firstwinnings.push_back(winprize);
                 break;
                 case 2:
-                winprize = {0,bet->player,draw,asset(0,CORE_SYMBOL),tickets.at(i),prize};
+                winprize = {0,bet->player,draw,asset(0, CORE_SYMBOL), tickets.at(i), prize};
                 secondwinnings.push_back(winprize);
                 break;
                 case 3:
-                sendbonus(asset(500,CORE_SYMBOL),bet->player,draw,prize,tickets.at(i));
+                sendbonus(asset(500, CORE_SYMBOL), bet->player, draw, prize, tickets.at(i));
                 break;
                 case 4:
-                sendbonus(asset(30,CORE_SYMBOL),bet->player,draw,prize,tickets.at(i));
+                sendbonus(asset(30, CORE_SYMBOL), bet->player, draw, prize, tickets.at(i));
                 break;
                 case 5:
-                sendbonus(asset(20,CORE_SYMBOL),bet->player,draw,prize,tickets.at(i));
+                sendbonus(asset(20, CORE_SYMBOL), bet->player, draw, prize, tickets.at(i));
                 break;
                 case 6:
-                sendbonus(asset(10,CORE_SYMBOL),bet->player,draw,prize,tickets.at(i));
+                sendbonus(asset(10, CORE_SYMBOL), bet->player, draw, prize, tickets.at(i));
                 break;
             }
         }
     }
 
-    drawhighlottery(draw,firstwinnings,secondwinnings);
+    drawhighlottery(draw, firstwinnings, secondwinnings);
 }
 
-void trentlottery::sendbonus(asset bonus, account_name player,uint64_t draw,uint16_t prize,std::vector<uint16_t> offernum){
+void trentlottery::sendbonus(asset bonus, account_name player, uint64_t draw, uint16_t prize, std::vector<uint16_t> offernum){
     require_auth(_self);
     action act(
         permission_level{_self, N(active)},
