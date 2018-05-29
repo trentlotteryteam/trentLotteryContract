@@ -103,6 +103,26 @@ void trentlottery::enablegame()
     });
 }
 
+void trentlottery::lockgame(){
+    require_auth(_self);
+    eosio_assert(games.begin() != games.end(), "not started games!");
+    auto lastgame_itr = games.rbegin();
+    eosio_assert(lastgame_itr->status == BETTING, "game is not BETTING");
+
+    auto mgame_itr = games.find(lastgame_itr->draw);
+    games.modify(mgame_itr, 0, [&](auto &game) {
+        game.status = LOCKING;
+    });
+}
+
+uint64_t trentlottery::getnewestgame(){
+    require_auth(_self);
+    eosio_assert(games.begin() != games.end(), "not started games!");
+    auto lastgame_itr = games.rbegin();
+    eosio_assert(lastgame_itr->status == LOCKING, "game is not LOCKING");
+    return lastgame_itr->draw;
+}
+
 asset trentlottery::contractbalance()
 {
     accounts accountstable(N(eosio.token), _self);
@@ -232,7 +252,9 @@ void trentlottery::drawhighlottery(uint64_t draw, std::vector<winning> firstwinn
     }
 }
 
-void trentlottery::drawlottery(uint64_t draw){
+void trentlottery::drawlottery(){
+    require_auth(_self);
+    auto draw = trentlottery::getnewestgame();
     auto hitnum = generatehitnum();
     auto draw_index = offerbets.template get_index<N(draw)>();
     auto bet = draw_index.find(draw);
@@ -271,6 +293,8 @@ void trentlottery::drawlottery(uint64_t draw){
     }
 
     drawhighlottery(draw, firstwinnings, secondwinnings);
+
+    creategame();
 }
 
 void trentlottery::sendbonus(asset bonus, account_name player, uint64_t draw, uint16_t prize, std::vector<uint16_t> offernum){
@@ -290,9 +314,8 @@ void trentlottery::sendbonus(asset bonus, account_name player, uint64_t draw, ui
 }
 
 std::vector<uint16_t> trentlottery::generatehitnum(){
-    require_auth(_self);
     vector<uint16_t> initHitnum(7, 0);
     return initHitnum;
 }
 
-EOSIO_ABI(trentlottery, (playerbet)(startgame)(enablegame)(setprice)(getprice)(jackpot))
+EOSIO_ABI(trentlottery, (playerbet)(startgame)(enablegame)(setprice)(getprice)(jackpot)(lockgame)(drawlottery))
