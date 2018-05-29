@@ -75,6 +75,26 @@ void trentlottery::startgame()
     });
 }
 
+void trentlottery::setgamebonusgrade(const double first, const double second, const asset& third, const asset& fourth, const asset& fifth, const asset& sixth)
+{
+
+    eosio_assert(third.symbol == CORE_SYMBOL, "only core token allowed");
+    eosio_assert(third.is_valid(), "invalid third");
+    eosio_assert(third.amount > 0, "must positive third amount");
+    eosio_assert(fourth.symbol == CORE_SYMBOL, "only core token allowed");
+    eosio_assert(fourth.is_valid(), "invalid bet");
+    eosio_assert(fourth.amount > 0, "must positive bet amount");
+    eosio_assert(fifth.symbol == CORE_SYMBOL, "only core token allowed");
+    eosio_assert(fifth.is_valid(), "invalid bet");
+    eosio_assert(fifth.amount > 0, "must positive bet amount");
+    eosio_assert(sixth.symbol == CORE_SYMBOL, "only core token allowed");
+    eosio_assert(sixth.is_valid(), "invalid bet");
+    eosio_assert(sixth.amount > 0, "must positive bet amount");
+    eosio_assert(first>0 && first<1, "first is less than 1 and more than 0");
+    eosio_assert(second>0 && second<1, "second is less than 1 and more than 0");
+    require_auth(_self);
+    gamebonusgrade = {first, second, third, fourth, fifth, sixth};
+}
 void trentlottery::setprice(const asset &price)
 {
     eosio_assert(price.symbol == CORE_SYMBOL, "only core token allowed");
@@ -240,16 +260,23 @@ uint16_t trentlottery::judgeprice(std::vector<uint16_t> hitnum, std::vector<uint
 
 void trentlottery::drawhighlottery(uint64_t draw, std::vector<winning> firstwinnings, std::vector<winning> secondwinnings)
 {
-    asset firstpot{10000000, CORE_SYMBOL};
-    asset firstbonus = firstpot/firstwinnings.size();
-    asset secondpot{2000000, CORE_SYMBOL};
-    asset secondbonus = secondpot/secondwinnings.size();
-    for(uint16_t i = 0; i < secondwinnings.size(); i++){
+    
+    if(firstwinnings.size()>0){
+        asset firstpot{10000000, CORE_SYMBOL};
+        asset firstbonus = firstpot/firstwinnings.size();
+        for(uint16_t i = 0; i < secondwinnings.size(); i++){
         sendbonus(firstbonus,firstwinnings.at(i).winner,draw,firstwinnings.at(i).prize,firstwinnings.at(i).offernum);
+        }
     }
-    for(uint16_t i = 0; i < secondwinnings.size(); i++){
+   
+    if(secondwinnings.size()>0){
+        asset secondpot{2000000, CORE_SYMBOL};
+        asset secondbonus = secondpot/secondwinnings.size();
+        for(uint16_t i = 0; i < secondwinnings.size(); i++){
         sendbonus(secondbonus,secondwinnings.at(i).winner,draw,secondwinnings.at(i).prize,secondwinnings.at(i).offernum);
+        }
     }
+    
 }
 
 void trentlottery::drawlottery(){
@@ -277,16 +304,16 @@ void trentlottery::drawlottery(){
                 secondwinnings.push_back(winprize);
                 break;
                 case 3:
-                sendbonus(asset(500, CORE_SYMBOL), bet->player, draw, prize, tickets.at(i));
+                sendbonus(gamebonusgrade.third, bet->player, draw, prize, tickets.at(i));
                 break;
                 case 4:
-                sendbonus(asset(30, CORE_SYMBOL), bet->player, draw, prize, tickets.at(i));
+                sendbonus(gamebonusgrade.fourth, bet->player, draw, prize, tickets.at(i));
                 break;
                 case 5:
-                sendbonus(asset(20, CORE_SYMBOL), bet->player, draw, prize, tickets.at(i));
+                sendbonus(gamebonusgrade.fifth, bet->player, draw, prize, tickets.at(i));
                 break;
                 case 6:
-                sendbonus(asset(10, CORE_SYMBOL), bet->player, draw, prize, tickets.at(i));
+                sendbonus(gamebonusgrade.sixth, bet->player, draw, prize, tickets.at(i));
                 break;
             }
         }

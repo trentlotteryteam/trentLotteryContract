@@ -24,6 +24,16 @@ class trentlottery : public eosio::contract
         OVER                // 已开奖，本轮游戏已结束
     } game_status;
 
+    struct bonusgrade
+    {
+        double first = 0.7;
+        double second = 0.3;
+        asset third{300,CORE_SYMBOL};
+        asset fourth{100,CORE_SYMBOL};
+        asset fifth{50,CORE_SYMBOL};
+        asset sixth{10,CORE_SYMBOL};
+    };
+
     //@abi table games i64
     struct game
     {
@@ -99,6 +109,7 @@ class trentlottery : public eosio::contract
     winning_record_index winnings;
 
     asset ticketprice;
+    bonusgrade gamebonusgrade;
 
   public:
     trentlottery(account_name self)
@@ -115,9 +126,11 @@ class trentlottery : public eosio::contract
     void enablegame();
     void jackpot(const name user);
     void setprice(const asset& price);
+    void setgamebonusgrade(const double first, const double second, const asset& third, const asset& fourth, const asset& fifth, const asset& sixth);
     void getprice();
     void lockgame();
     void drawlottery();
+
   private:
     void creategame();
     std::vector<std::vector<uint16_t>> parseofferbet(uint32_t cnt, std::vector<uint16_t> tickets);
