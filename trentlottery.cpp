@@ -260,9 +260,10 @@ uint16_t trentlottery::judgeprice(std::vector<uint16_t> hitnum, std::vector<uint
 
 void trentlottery::drawhighlottery(uint64_t draw, std::vector<winning> firstwinnings, std::vector<winning> secondwinnings)
 {
-    
+    const auto balance = contractbalance();
     if(firstwinnings.size()>0){
-        asset firstpot{10000000, CORE_SYMBOL};
+        int64_t firstuint = int64_t(gamebonusgrade.first * 10);
+        asset firstpot = balance * firstuint;
         asset firstbonus = firstpot/firstwinnings.size();
         for(uint16_t i = 0; i < secondwinnings.size(); i++){
         sendbonus(firstbonus,firstwinnings.at(i).winner,draw,firstwinnings.at(i).prize,firstwinnings.at(i).offernum);
@@ -270,7 +271,8 @@ void trentlottery::drawhighlottery(uint64_t draw, std::vector<winning> firstwinn
     }
    
     if(secondwinnings.size()>0){
-        asset secondpot{2000000, CORE_SYMBOL};
+        int64_t seconduint = int64_t(gamebonusgrade.second * 10);
+        asset secondpot = (balance * seconduint)/10;
         asset secondbonus = secondpot/secondwinnings.size();
         for(uint16_t i = 0; i < secondwinnings.size(); i++){
         sendbonus(secondbonus,secondwinnings.at(i).winner,draw,secondwinnings.at(i).prize,secondwinnings.at(i).offernum);
