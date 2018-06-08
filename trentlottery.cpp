@@ -10,7 +10,8 @@ void trentlottery::playerbet(uint64_t draw, const name player, const uint32_t bu
 {
     require_auth(player);
     asset bet = ticketprice * buycnt;
-
+    
+    eosio_assert(isInMaintain() == false, "The game is under maintenance");
     eosio_assert(games.begin() != games.end(), "game not started");
     auto lastgame_itr = games.rbegin();
     eosio_assert(lastgame_itr->status == BETTING, "game is not betting");
@@ -68,6 +69,14 @@ void trentlottery::startgame()
     eosio_assert(games.begin() == games.end(), "already have started games!");
     require_auth(_self);
 
+    auto game_itr = globalgames.begin();
+    if ( game_itr == globalgames.end() ) 
+    {
+        game_itr = globalgames.emplace(_self, [&](auto& ggame){
+            ggame.maintained = false;
+        });
+    }
+
     games.emplace(_self, [&](auto &game) {
         game.draw = 1;
         game.status = LOCKING;
@@ -77,6 +86,7 @@ void trentlottery::startgame()
 
 void trentlottery::setprice(const asset &price)
 {
+    eosio_assert(isInMaintain() == false, "The game is under maintenance");
     eosio_assert(price.symbol == CORE_SYMBOL, "only core token allowed");
     eosio_assert(price.is_valid(), "invalid bet");
     eosio_assert(price.amount > 0, "must positive bet amount");
@@ -85,14 +95,16 @@ void trentlottery::setprice(const asset &price)
     ticketprice = price;
 }
 
-void trentlottery::getprice()
+void trentlottery::getprice(const name player)
 {
-    print("Ticket price is ", ticketprice.amount, " EOS");
+    require_auth(player);
+    print("Ticket price is ", ticketprice.amount, " SYS\n");
 }
 
 void trentlottery::enablegame()
 {
     require_auth(_self);
+    eosio_assert(isInMaintain() == false, "The game is under maintenance");
     eosio_assert(games.begin() != games.end(), "not started games!");
     auto lastgame_itr = games.rbegin();
     eosio_assert(lastgame_itr->status == LOCKING, "game is not locking");
@@ -218,6 +230,44 @@ uint16_t trentlottery::judgeprice(std::vector<uint16_t> hitnum, std::vector<uint
     return price;
 }
 
+void trentlottery::setgamestate(bool maintenance)
+{
+    require_auth(_self);
+    auto game_itr = globalgames.begin();
+    if ( game_itr == globalgames.end() ) 
+    {
+        game_itr = globalgames.emplace(_self, [&](auto& ggame){
+            ggame.maintained = false;
+        });
+    }
+
+    globalgames.modify(game_itr, 0, [&](auto& ggame){
+        ggame.maintained = maintenance;
+    });
+}
+
+void trentlottery::getgamestate(const name player)
+{
+    require_auth(player);
+    auto game_itr = globalgames.begin();
+    if ( game_itr == globalgames.end() ) 
+    {
+        print("game maintenance is false");
+        return;
+    }
+    print("game maintenance is ", game_itr->maintained);
+}
+
+bool trentlottery::isInMaintain()
+{
+    auto game_itr = globalgames.begin();
+    if ( game_itr == globalgames.end() ) 
+    {
+        return false;
+    }
+    return game_itr->maintained;
+}
+
 void trentlottery::drawhighlottery(uint64_t draw, std::vector<winning> firstwinnings, std::vector<winning> secondwinnings)
 {
     asset firstpot{10000000, CORE_SYMBOL};
@@ -295,4 +345,4 @@ std::vector<uint16_t> trentlottery::generatehitnum(){
     return initHitnum;
 }
 
-EOSIO_ABI(trentlottery, (playerbet)(startgame)(enablegame)(setprice)(getprice)(jackpot))
+EOSIO_ABI(trentlottery, (playerbet)(startgame)(enablegame)(setprice)(getprice)(jackpot)(getgamestate)(setgamestate))

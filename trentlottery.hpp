@@ -24,6 +24,17 @@ class trentlottery : public eosio::contract
         OVER                // 已开奖，本轮游戏已结束
     } game_status;
 
+    //@abi table globalgame i64
+    struct globalgame
+    {
+        uint64_t id = 0;                        // 主键，使用available_primary_key生成
+        bool maintained = false;                // 是否处于系统维护状态
+
+        uint64_t primary_key()const { return id; }
+
+        EOSLIB_SERIALIZE( globalgame, (id)(maintained) )
+    };
+
     //@abi table games i64
     struct game
     {
@@ -76,11 +87,11 @@ class trentlottery : public eosio::contract
         asset balance;
 
         uint64_t primary_key() const { return balance.symbol.name(); }
-
-        EOSLIB_SERIALIZE(account, (balance))
     };
 
   private:
+    typedef eosio::multi_index<N(globalgame), globalgame> globalgame_index;
+
     typedef eosio::multi_index<N(games), game> game_index;
 
     typedef eosio::multi_index<N(offerbets), offerbet,
@@ -94,16 +105,17 @@ class trentlottery : public eosio::contract
 
     typedef eosio::multi_index<N(accounts), account> accounts;
 
+    globalgame_index globalgames;
     game_index games;
     offer_bets_index offerbets;
     winning_record_index winnings;
 
     asset ticketprice;
-    bool in_maintenance;
 
   public:
     trentlottery(account_name self)
         : eosio::contract(self),
+          globalgames(_self, _self),
           games(_self, _self),
           offerbets(_self, _self),
           winnings(_self, _self),
@@ -116,9 +128,12 @@ class trentlottery : public eosio::contract
     void enablegame();
     void jackpot(const name user);
     void setprice(const asset& price);
-    void getprice();
+    void getprice(const name player);
+    void setgamestate(bool maintenance);
+    void getgamestate(const name player);
 
   private:
+    bool isInMaintain();
     void creategame();
     std::vector<std::vector<uint16_t>> parseofferbet(uint32_t cnt, std::vector<uint16_t> tickets);
     bool isTicketValid(std::vector<uint16_t> ticket);
