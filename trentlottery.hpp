@@ -35,6 +35,16 @@ class trentlottery : public eosio::contract
         EOSLIB_SERIALIZE( globalgame, (id)(maintained) )
     };
 
+    struct bonusgrade
+    {
+        double first = 0.7;
+        double second = 0.3;
+        asset third{300,CORE_SYMBOL};
+        asset fourth{100,CORE_SYMBOL};
+        asset fifth{50,CORE_SYMBOL};
+        asset sixth{10,CORE_SYMBOL};
+    };
+
     //@abi table games i64
     struct game
     {
@@ -111,6 +121,7 @@ class trentlottery : public eosio::contract
     winning_record_index winnings;
 
     asset ticketprice;
+    bonusgrade gamebonusgrade;
 
   public:
     trentlottery(account_name self)
@@ -131,6 +142,9 @@ class trentlottery : public eosio::contract
     void getprice(const name player);
     void setgamestate(bool maintenance);
     void getgamestate(const name player);
+    void setgamebonusgrade(const double first, const double second, const asset& third, const asset& fourth, const asset& fifth, const asset& sixth);
+    void lockgame();
+    void drawlottery();
 
   private:
     bool isInMaintain();
@@ -139,8 +153,10 @@ class trentlottery : public eosio::contract
     bool isTicketValid(std::vector<uint16_t> ticket);
     uint16_t judgeprice(std::vector<uint16_t> hitnum, std::vector<uint16_t> offernum);
     asset contractbalance();
-    void drawlottery(uint64_t draw);
+   
     void drawhighlottery(uint64_t draw, std::vector<winning> firstwinnings, std::vector<winning> secondwinnings);
     void sendbonus(asset bonus, account_name player,uint64_t draw,uint16_t prize,std::vector<uint16_t> offernum);
     std::vector<uint16_t> generatehitnum();
+    uint64_t getnewestgame();
+
 };
