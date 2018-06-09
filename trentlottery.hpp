@@ -132,7 +132,7 @@ class trentlottery : public eosio::contract
     void getprice();
     void setgamestate(bool maintenance);
     void getgamestate();
-    void setgamebonusgrade(const double first, const double second, const asset& third, const asset& fourth, const asset& fifth, const asset& sixth);
+    void setbonus(const double first, const double second, const asset &third, const asset &fourth, const asset &fifth, const asset &sixth);
     void lockgame();
     void drawlottery();
 

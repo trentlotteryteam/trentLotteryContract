@@ -85,7 +85,7 @@ void trentlottery::startgame()
     });
 }
 
-void trentlottery::setgamebonusgrade(const double first, const double second, const asset& third, const asset& fourth, const asset& fifth, const asset& sixth)
+void trentlottery::setbonus(const double first, const double second, const asset& third, const asset& fourth, const asset& fifth, const asset& sixth)
 {
 
     eosio_assert(third.symbol == CORE_SYMBOL, "only core token allowed");
@@ -105,6 +105,7 @@ void trentlottery::setgamebonusgrade(const double first, const double second, co
     require_auth(_self);
     gamebonusgrade = {first, second, third, fourth, fifth, sixth};
 }
+
 void trentlottery::setprice(const asset &price)
 {
     eosio_assert(isInMaintain() == false, "The game is under maintenance");
@@ -135,7 +136,8 @@ void trentlottery::enablegame()
     });
 }
 
-void trentlottery::lockgame(){
+void trentlottery::lockgame()
+{
     require_auth(_self);
     eosio_assert(games.begin() != games.end(), "not started games!");
     auto lastgame_itr = games.rbegin();
@@ -147,7 +149,8 @@ void trentlottery::lockgame(){
     });
 }
 
-uint64_t trentlottery::getnewestgame(){
+uint64_t trentlottery::getnewestgame()
+{
     require_auth(_self);
     eosio_assert(games.begin() != games.end(), "not started games!");
     auto lastgame_itr = games.rbegin();
@@ -331,19 +334,19 @@ void trentlottery::drawhighlottery(uint64_t draw, std::vector<winning> firstwinn
 void trentlottery::drawlottery()
 {
     require_auth(_self);
-    auto draw = trentlottery::getnewestgame();
+    auto draw = getnewestgame();
     auto hitnum = generatehitnum();
     auto draw_index = offerbets.template get_index<N(draw)>();
     auto bet = draw_index.find(draw);
-    vector<trentlottery::winning> firstwinnings;
-    vector<trentlottery::winning> secondwinnings;
+    vector<winning> firstwinnings;
+    vector<winning> secondwinnings;
 
     for(; bet != draw_index.end(); bet++)
     {
-        auto tickets = trentlottery::parseofferbet(bet->buycnt,bet->buylottos);
+        auto tickets = parseofferbet(bet->buycnt,bet->buylottos);
         for(uint16_t i = 0; i < tickets.size()-1; i++){
-            auto prize = trentlottery::judgeprice(hitnum, tickets.at(i));
-            trentlottery::winning winprize;
+            auto prize = judgeprice(hitnum, tickets.at(i));
+            winning winprize;
             switch(prize){
                 case 1:
                 winprize = {0,bet->player,draw,asset(0, CORE_SYMBOL), tickets.at(i), prize};
