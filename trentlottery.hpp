@@ -91,14 +91,6 @@ class trentlottery : public eosio::contract
         EOSLIB_SERIALIZE(winning, (id)(winner)(draw)(currency)(offernum)(prize))
     };
 
-    //@abi table accounts i64
-    struct account
-    {
-        asset balance;
-
-        uint64_t primary_key() const { return balance.symbol.name(); }
-    };
-
   private:
     typedef eosio::multi_index<N(globalgame), globalgame> globalgame_index;
 
@@ -112,8 +104,6 @@ class trentlottery : public eosio::contract
     typedef eosio::multi_index<N(winnings), winning,
                                indexed_by<N(draw), const_mem_fun<winning, uint64_t, &winning::by_draw>>>
         winning_record_index;
-
-    typedef eosio::multi_index<N(accounts), account> accounts;
 
     globalgame_index globalgames;
     game_index games;
@@ -137,11 +127,11 @@ class trentlottery : public eosio::contract
     void playerbet(uint64_t draw, const name player, const uint32_t buycnt, std::vector<uint16_t> bills);
     void startgame();
     void enablegame();
-    void jackpot(const name user);
+    void jackpot();
     void setprice(const asset& price);
-    void getprice(const name player);
+    void getprice();
     void setgamestate(bool maintenance);
-    void getgamestate(const name player);
+    void getgamestate();
     void setgamebonusgrade(const double first, const double second, const asset& third, const asset& fourth, const asset& fifth, const asset& sixth);
     void lockgame();
     void drawlottery();

@@ -1,5 +1,6 @@
 // #include <fc/crypto/rand.hpp>
 #include "trentlottery.hpp"
+#include <eosio.token/eosio.token.hpp>
 
 using namespace std;
 using eosio::action;
@@ -115,10 +116,9 @@ void trentlottery::setprice(const asset &price)
     ticketprice = price;
 }
 
-void trentlottery::getprice(const name player)
+void trentlottery::getprice()
 {
-    require_auth(player);
-    print("Ticket price is ", ticketprice.amount, " SYS\n");
+    print("Ticket price is ", ticketprice, "\n");
 }
 
 void trentlottery::enablegame()
@@ -157,16 +157,14 @@ uint64_t trentlottery::getnewestgame(){
 
 asset trentlottery::contractbalance()
 {
-    accounts accountstable(N(eosio.token), _self);
-    const auto &ac = accountstable.get(CORE_SYMBOL);
-    return ac.balance;
+    return eosio::token(N(eosio.token)).get_balance(_self, eosio::symbol_type(CORE_SYMBOL).name());
+    // return asset{0, CORE_SYMBOL};
 }
 
-void trentlottery::jackpot(const name user)
+void trentlottery::jackpot()
 {
-    require_auth(user);
     const auto balance = contractbalance();
-    print("trentlottery balance: ", balance.amount);
+    print("trentlottery balance: ", balance, "\n");
 }
 
 std::vector<std::vector<uint16_t>> trentlottery::parseofferbet(uint32_t cnt, std::vector<uint16_t> tickets)
@@ -286,9 +284,8 @@ void trentlottery::setgamestate(bool maintenance)
     });
 }
 
-void trentlottery::getgamestate(const name player)
+void trentlottery::getgamestate()
 {
-    require_auth(player);
     auto game_itr = globalgames.begin();
     if ( game_itr == globalgames.end() ) 
     {
