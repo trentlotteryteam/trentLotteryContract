@@ -10,8 +10,9 @@ using eosio::permission_level;
 void trentlottery::playerbet(uint64_t draw, const name player, const uint32_t buycnt, std::vector<uint16_t> bills)
 {
     require_auth(player);
+    auto ticketprice = getticketprice();
     asset bet = ticketprice * buycnt;
-    
+
     eosio_assert(isInMaintain() == false, "The game is under maintenance");
     eosio_assert(games.begin() != games.end(), "game not started");
     auto lastgame_itr = games.rbegin();
@@ -70,13 +71,13 @@ void trentlottery::startgame()
     eosio_assert(games.begin() == games.end(), "already have started games!");
     require_auth(_self);
 
-    auto game_itr = globalgames.begin();
-    if ( game_itr == globalgames.end() ) 
-    {
-        game_itr = globalgames.emplace(_self, [&](auto& ggame){
-            ggame.maintained = false;
-        });
-    }
+    globalgames.emplace(_self, [&](auto &ggame) {
+        ggame.maintained = false;
+    });
+
+    ticket_price.emplace(_self, [&](auto &tprice) {
+        tprice.price = asset{10, CORE_SYMBOL};
+    });
 
     games.emplace(_self, [&](auto &game) {
         game.draw = 1;
@@ -114,12 +115,17 @@ void trentlottery::setprice(const asset &price)
     eosio_assert(price.amount > 0, "must positive bet amount");
     require_auth(_self);
 
-    ticketprice = price;
+    auto price_itr = ticket_price.begin();
+    eosio_assert(price_itr != ticket_price.end(), "The game not started!");
+    ticket_price.modify(price_itr, 0, [&](auto &tprice) {
+        tprice.price = price;
+    });
 }
 
 void trentlottery::getprice()
 {
-    print("Ticket price is ", ticketprice, "\n");
+    auto price = getticketprice();
+    print("Ticket price is ", price, "\n");
 }
 
 void trentlottery::enablegame()
@@ -306,6 +312,13 @@ bool trentlottery::isInMaintain()
         return false;
     }
     return game_itr->maintained;
+}
+
+asset trentlottery::getticketprice()
+{
+    auto price_itr = ticket_price.begin();
+    eosio_assert(price_itr != ticket_price.end(), "The game not started!");
+    return price_itr->price;
 }
 
 void trentlottery::drawhighlottery(uint64_t draw, std::vector<winning> firstwinnings, std::vector<winning> secondwinnings)

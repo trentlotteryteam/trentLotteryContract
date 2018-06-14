@@ -35,6 +35,17 @@ class trentlottery : public eosio::contract
         EOSLIB_SERIALIZE( globalgame, (id)(maintained) )
     };
 
+    //@abi table ticketprice i64
+    struct ticketprice
+    {
+        uint64_t id = 0; // 主键，使用available_primary_key生成
+        asset price;
+
+        uint64_t primary_key() const { return id; }
+
+        EOSLIB_SERIALIZE(ticketprice, (id)(price))
+    };
+
     struct bonusgrade
     {
         double first = 0.7;
@@ -94,6 +105,8 @@ class trentlottery : public eosio::contract
   private:
     typedef eosio::multi_index<N(globalgame), globalgame> globalgame_index;
 
+    typedef eosio::multi_index<N(ticketprice), ticketprice> ticketprice_index;
+
     typedef eosio::multi_index<N(games), game> game_index;
 
     typedef eosio::multi_index<N(offerbets), offerbet,
@@ -110,7 +123,7 @@ class trentlottery : public eosio::contract
     offer_bets_index offerbets;
     winning_record_index winnings;
 
-    asset ticketprice;
+    ticketprice_index ticket_price;
     bonusgrade gamebonusgrade;
 
   public:
@@ -120,7 +133,7 @@ class trentlottery : public eosio::contract
           games(_self, _self),
           offerbets(_self, _self),
           winnings(_self, _self),
-          ticketprice(asset{10, CORE_SYMBOL})
+          ticket_price(_self, _self)
     {
     }
 
@@ -148,5 +161,5 @@ class trentlottery : public eosio::contract
     void sendbonus(asset bonus, account_name player,uint64_t draw,uint16_t prize,std::vector<uint16_t> offernum);
     std::vector<uint16_t> generatehitnum();
     uint64_t getnewestgame();
-
+    asset getticketprice();
 };
