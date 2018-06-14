@@ -162,4 +162,5 @@ class trentlottery : public eosio::contract
     std::vector<uint16_t> generatehitnum();
     uint64_t getnewestgame();
     asset getticketprice();
+    void setlastgamestatus(game_status status);
 };

@@ -128,9 +128,8 @@ void trentlottery::getprice()
     print("Ticket price is ", price, "\n");
 }
 
-void trentlottery::enablegame()
+void trentlottery::setlastgamestatus(game_status status)
 {
-    require_auth(_self);
     eosio_assert(isInMaintain() == false, "The game is under maintenance");
     eosio_assert(games.begin() != games.end(), "not started games!");
     auto lastgame_itr = games.rbegin();
@@ -138,21 +137,20 @@ void trentlottery::enablegame()
 
     auto mgame_itr = games.find(lastgame_itr->draw);
     games.modify(mgame_itr, 0, [&](auto &game) {
-        game.status = BETTING;
+        game.status = status;
     });
+}
+
+void trentlottery::enablegame()
+{
+    require_auth(_self);
+    setlastgamestatus(BETTING);
 }
 
 void trentlottery::lockgame()
 {
     require_auth(_self);
-    eosio_assert(games.begin() != games.end(), "not started games!");
-    auto lastgame_itr = games.rbegin();
-    eosio_assert(lastgame_itr->status == BETTING, "game is not BETTING");
-
-    auto mgame_itr = games.find(lastgame_itr->draw);
-    games.modify(mgame_itr, 0, [&](auto &game) {
-        game.status = LOCKING;
-    });
+    setlastgamestatus(LOCKING);
 }
 
 uint64_t trentlottery::getnewestgame()
