@@ -143,8 +143,8 @@ class trentlottery : public eosio::contract
     void jackpot();
     void setprice(const asset& price);
     void getprice();
-    void setgamestate(bool maintenance);
-    void getgamestate();
+    void setmaintain(bool maintenance);
+    void getmaintain();
     void setbonus(const double first, const double second, const asset &third, const asset &fourth, const asset &fifth, const asset &sixth);
     void lockgame();
     void drawlottery();
@@ -160,7 +160,6 @@ class trentlottery : public eosio::contract
     void drawhighlottery(uint64_t draw, std::vector<winning> firstwinnings, std::vector<winning> secondwinnings);
     void sendbonus(asset bonus, account_name player,uint64_t draw,uint16_t prize,std::vector<uint16_t> offernum);
     std::vector<uint16_t> generatehitnum();
-    uint64_t getnewestgame();
     asset getticketprice();
     void setlastgamestatus(game_status status);
 };
