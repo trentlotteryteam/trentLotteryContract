@@ -1,4 +1,4 @@
-// #include <fc/crypto/rand.hpp>
+
 #include "trentlottery.hpp"
 #include <eosio.token/eosio.token.hpp>
 
@@ -21,7 +21,8 @@ void trentlottery::playerbet(uint64_t draw, const name player, const uint32_t bu
 
     eosio_assert(buycnt*7 == bills.size(), "maybe lost lottery tickets");
 
-    auto tickets = parseofferbet(buycnt, bills);
+    vector<vector<uint16_t>> tickets;
+    parseofferbet(buycnt, bills, tickets);
     for (uint32_t i = 0; i < buycnt; i++)
     {
         eosio_assert(isTicketValid(tickets.at(i)), "lottery tickets invalid");
@@ -165,24 +166,14 @@ void trentlottery::jackpot()
     print("trentlottery balance: ", balance, "\n");
 }
 
-std::vector<std::vector<uint16_t>> trentlottery::parseofferbet(uint32_t cnt, std::vector<uint16_t> tickets)
+std::vector<std::vector<uint16_t>> trentlottery::parseofferbet(uint32_t cnt, std::vector<uint16_t> tickets, std::vector<std::vector<uint16_t>> &betbills)
 {
     eosio_assert(cnt * 7 == tickets.size(), "maybe lost lottery tickets");
 
-    vector<vector<uint16_t>> betbills;
-
-    size_t seg = 0;
-    vector<uint16_t> subbill;
-    for (auto iter = tickets.cbegin(); iter != tickets.cend(); iter++) 
+    for (uint32_t i = 0; i < cnt; i++)
     {
-        subbill.push_back(*iter);
-        seg++;
-
-        if (seg % 7 == 0)
-        {
-            betbills.push_back(subbill);
-            subbill.clear();
-        }
+        vector<uint16_t> subbill(tickets.begin()+(int)(7*i), tickets.begin()+(int)(7*(i+1)));
+        betbills.push_back(subbill);
     }
     return betbills;
 }
@@ -345,10 +336,11 @@ void trentlottery::drawlottery()
     auto bet = draw_index.find(draw);
     vector<winning> firstwinnings;
     vector<winning> secondwinnings;
+    vector<vector<uint16_t>> betbills;
 
     for(; bet != draw_index.end(); bet++)
     {
-        auto tickets = parseofferbet(bet->buycnt,bet->buylottos);
+        auto tickets = parseofferbet(bet->buycnt, bet->buylottos, betbills);
         for(uint16_t i = 0; i < tickets.size()-1; i++){
             auto prize = judgeprice(hitnum, tickets.at(i));
             winning winprize;

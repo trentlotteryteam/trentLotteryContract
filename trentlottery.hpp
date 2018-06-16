@@ -152,7 +152,7 @@ class trentlottery : public eosio::contract
   private:
     bool isInMaintain();
     void creategame();
-    std::vector<std::vector<uint16_t>> parseofferbet(uint32_t cnt, std::vector<uint16_t> tickets);
+    std::vector<std::vector<uint16_t>> parseofferbet(uint32_t cnt, std::vector<uint16_t> tickets, std::vector<std::vector<uint16_t>> &betbills);
     bool isTicketValid(std::vector<uint16_t> ticket);
     uint16_t judgeprice(std::vector<uint16_t> hitnum, std::vector<uint16_t> offernum);
     asset contractbalance();
