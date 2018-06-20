@@ -46,14 +46,24 @@ class trentlottery : public eosio::contract
         EOSLIB_SERIALIZE(ticketprice, (id)(price))
     };
 
+    //@abi table bonusgrade i64
     struct bonusgrade
     {
-        double first = 0.7;
-        double second = 0.3;
-        asset third{300,CORE_SYMBOL};
-        asset fourth{100,CORE_SYMBOL};
-        asset fifth{50,CORE_SYMBOL};
-        asset sixth{10,CORE_SYMBOL};
+        uint64_t id = 0; // 主键，使用available_primary_key生成
+
+        double firstrate;
+        double secondrate;
+
+        asset maxfirst;
+        asset maxsecond;
+        asset third;
+        asset fourth;
+        asset fifth;
+        asset sixth;
+
+        uint64_t primary_key() const { return id; }
+
+        EOSLIB_SERIALIZE(bonusgrade, (id)(firstrate)(secondrate)(maxfirst)(maxsecond)(third)(fourth)(fifth)(sixth))
     };
 
     //@abi table games i64
@@ -107,6 +117,8 @@ class trentlottery : public eosio::contract
 
     typedef eosio::multi_index<N(ticketprice), ticketprice> ticketprice_index;
 
+    typedef eosio::multi_index<N(bonusgrade), bonusgrade> bonusgrade_index;
+
     typedef eosio::multi_index<N(games), game> game_index;
 
     typedef eosio::multi_index<N(offerbets), offerbet,
@@ -124,7 +136,7 @@ class trentlottery : public eosio::contract
     winning_record_index winnings;
 
     ticketprice_index ticket_price;
-    bonusgrade gamebonusgrade;
+    bonusgrade_index gamebonusgrade;
 
   public:
     trentlottery(account_name self)
@@ -133,7 +145,8 @@ class trentlottery : public eosio::contract
           games(_self, _self),
           offerbets(_self, _self),
           winnings(_self, _self),
-          ticket_price(_self, _self)
+          ticket_price(_self, _self),
+          gamebonusgrade(_self, _self)
     {
     }
 
@@ -145,7 +158,7 @@ class trentlottery : public eosio::contract
     void getprice();
     void setmaintain(bool maintenance);
     void getmaintain();
-    void setbonus(const double first, const double second, const asset &third, const asset &fourth, const asset &fifth, const asset &sixth);
+    void setbonus(const double firstrate, const double secondrate, const asset &maxfirst, const asset &maxsecond, const asset &third, const asset &fourth, const asset &fifth, const asset &sixth);
     void lockgame();
     void drawlottery();
 

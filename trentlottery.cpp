@@ -80,6 +80,17 @@ void trentlottery::startgame()
         tprice.price = asset{10, CORE_SYMBOL};
     });
 
+    gamebonusgrade.emplace(_self, [&](auto &bonusgrade) {
+        bonusgrade.firstrate = 0.7;
+        bonusgrade.secondrate = 0.3;
+        bonusgrade.maxfirst = asset{100000000000, CORE_SYMBOL};
+        bonusgrade.maxsecond = asset{50000000000, CORE_SYMBOL};
+        bonusgrade.third = asset{15000, CORE_SYMBOL};
+        bonusgrade.fourth = asset{1000, CORE_SYMBOL};
+        bonusgrade.fifth = asset{50, CORE_SYMBOL};
+        bonusgrade.sixth = asset{25, CORE_SYMBOL};
+    });
+
     games.emplace(_self, [&](auto &game) {
         game.draw = 1;
         game.status = LOCKING;
@@ -87,9 +98,17 @@ void trentlottery::startgame()
     });
 }
 
-void trentlottery::setbonus(const double first, const double second, const asset& third, const asset& fourth, const asset& fifth, const asset& sixth)
+void trentlottery::setbonus(const double firstrate, const double secondrate, const asset& maxfirst, const asset& maxsecond, const asset& third, const asset& fourth, const asset& fifth, const asset& sixth)
 {
-
+    eosio_assert(firstrate > 0 && firstrate < 1, "firstrate is less than 1 and more than 0");
+    eosio_assert(secondrate > 0 && secondrate < 1, "second is less than 1 and more than 0");
+    eosio_assert(firstrate+secondrate > 0 && firstrate+secondrate <= 1, "amount rate must be less than 1");
+    eosio_assert(maxfirst.symbol == CORE_SYMBOL, "only core token allowed");
+    eosio_assert(maxfirst.is_valid(), "invalid maxfirst");
+    eosio_assert(maxfirst.amount > 0, "must positive maxfirst amount");
+    eosio_assert(maxsecond.symbol == CORE_SYMBOL, "only core token allowed");
+    eosio_assert(maxsecond.is_valid(), "invalid maxsecond");
+    eosio_assert(maxsecond.amount > 0, "must positive maxsecond amount");
     eosio_assert(third.symbol == CORE_SYMBOL, "only core token allowed");
     eosio_assert(third.is_valid(), "invalid third");
     eosio_assert(third.amount > 0, "must positive third amount");
@@ -102,10 +121,21 @@ void trentlottery::setbonus(const double first, const double second, const asset
     eosio_assert(sixth.symbol == CORE_SYMBOL, "only core token allowed");
     eosio_assert(sixth.is_valid(), "invalid bet");
     eosio_assert(sixth.amount > 0, "must positive bet amount");
-    eosio_assert(first>0 && first<1, "first is less than 1 and more than 0");
-    eosio_assert(second>0 && second<1, "second is less than 1 and more than 0");
+    
     require_auth(_self);
-    gamebonusgrade = {first, second, third, fourth, fifth, sixth};
+
+    auto gamebonus_itr = gamebonusgrade.begin();
+    eosio_assert(gamebonus_itr != gamebonusgrade.end(), "The game not started!");
+    gamebonusgrade.modify(gamebonus_itr, 0, [&](auto &bonusgrade) {
+        bonusgrade.firstrate = firstrate;
+        bonusgrade.secondrate = secondrate;
+        bonusgrade.maxfirst = maxfirst;
+        bonusgrade.maxsecond = maxsecond;
+        bonusgrade.third = third;
+        bonusgrade.fourth = fourth;
+        bonusgrade.fifth = fifth;
+        bonusgrade.sixth = sixth;
+    });
 }
 
 void trentlottery::setprice(const asset &price)
@@ -304,21 +334,24 @@ asset trentlottery::getticketprice()
 void trentlottery::drawhighlottery(uint64_t draw, std::vector<winning> firstwinnings, std::vector<winning> secondwinnings)
 {
     const auto balance = contractbalance();
+    auto gamebonus_itr = gamebonusgrade.begin();
+    eosio_assert(gamebonus_itr != gamebonusgrade.end(), "The game not started!");
+
     if(firstwinnings.size()>0){
-        int64_t firstuint = int64_t(gamebonusgrade.first * 10);
+        int64_t firstuint = int64_t(gamebonus_itr->firstrate * 10);
         asset firstpot = balance * firstuint;
         asset firstbonus = firstpot/firstwinnings.size();
         for(uint16_t i = 0; i < secondwinnings.size(); i++){
-        sendbonus(firstbonus,firstwinnings.at(i).winner,draw,firstwinnings.at(i).prize,firstwinnings.at(i).offernum);
+            sendbonus(firstbonus,firstwinnings.at(i).winner,draw,firstwinnings.at(i).prize,firstwinnings.at(i).offernum);
         }
     }
    
     if(secondwinnings.size()>0){
-        int64_t seconduint = int64_t(gamebonusgrade.second * 10);
+        int64_t seconduint = int64_t(gamebonus_itr->secondrate * 10);
         asset secondpot = (balance * seconduint)/10;
         asset secondbonus = secondpot/secondwinnings.size();
         for(uint16_t i = 0; i < secondwinnings.size(); i++){
-        sendbonus(secondbonus,secondwinnings.at(i).winner,draw,secondwinnings.at(i).prize,secondwinnings.at(i).offernum);
+            sendbonus(secondbonus,secondwinnings.at(i).winner,draw,secondwinnings.at(i).prize,secondwinnings.at(i).offernum);
         }
     }
     
@@ -337,34 +370,37 @@ void trentlottery::drawlottery()
     vector<winning> firstwinnings;
     vector<winning> secondwinnings;
     vector<vector<uint16_t>> betbills;
+    auto gamebonus_itr = gamebonusgrade.begin();
+    eosio_assert(gamebonus_itr != gamebonusgrade.end(), "The game not started!");
 
     for(; bet != draw_index.end(); bet++)
     {
+        betbills.clear();
         auto tickets = parseofferbet(bet->buycnt, bet->buylottos, betbills);
         for(uint16_t i = 0; i < tickets.size()-1; i++){
             auto prize = judgeprice(hitnum, tickets.at(i));
             winning winprize;
             switch(prize){
                 case 1:
-                winprize = {0,bet->player,draw,asset(0, CORE_SYMBOL), tickets.at(i), prize};
-                firstwinnings.push_back(winprize);
-                break;
+                    winprize = {0,bet->player,draw,asset(0, CORE_SYMBOL), tickets.at(i), prize};
+                    firstwinnings.push_back(winprize);
+                    break;
                 case 2:
-                winprize = {0,bet->player,draw,asset(0, CORE_SYMBOL), tickets.at(i), prize};
-                secondwinnings.push_back(winprize);
-                break;
+                    winprize = {0,bet->player,draw,asset(0, CORE_SYMBOL), tickets.at(i), prize};
+                    secondwinnings.push_back(winprize);
+                    break;
                 case 3:
-                sendbonus(gamebonusgrade.third, bet->player, draw, prize, tickets.at(i));
-                break;
+                    sendbonus(gamebonus_itr->third, bet->player, draw, prize, tickets.at(i));
+                    break;
                 case 4:
-                sendbonus(gamebonusgrade.fourth, bet->player, draw, prize, tickets.at(i));
-                break;
+                    sendbonus(gamebonus_itr->fourth, bet->player, draw, prize, tickets.at(i));
+                    break;
                 case 5:
-                sendbonus(gamebonusgrade.fifth, bet->player, draw, prize, tickets.at(i));
-                break;
+                    sendbonus(gamebonus_itr->fifth, bet->player, draw, prize, tickets.at(i));
+                    break;
                 case 6:
-                sendbonus(gamebonusgrade.sixth, bet->player, draw, prize, tickets.at(i));
-                break;
+                    sendbonus(gamebonus_itr->sixth, bet->player, draw, prize, tickets.at(i));
+                    break;
             }
         }
     }
@@ -375,7 +411,6 @@ void trentlottery::drawlottery()
 }
 
 void trentlottery::sendbonus(asset bonus, account_name player, uint64_t draw, uint16_t prize, std::vector<uint16_t> offernum){
-    require_auth(_self);
     action act(
         permission_level{_self, N(active)},
         N(eosio.token), N(transfer),
